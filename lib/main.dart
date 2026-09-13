@@ -1,5 +1,42 @@
 import 'package:flutter/material.dart';
 
+// --- Model Data (UserModel) ---
+class UserModel {
+  final int id;
+  final String name;
+  final String email;
+  final String? phone;
+  final String? address;
+
+  UserModel({
+    required this.id,
+    required this.name,
+    required this.email,
+    this.phone,
+    this.address,
+  });
+
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    return UserModel(
+      id: json['id'] as int? ?? 0,
+      name: json['name'] as String? ?? 'Unknown',
+      email: json['email'] as String? ?? 'No Email',
+      phone: json['phone'] as String?,
+      address: json['address'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'email': email,
+      'phone': phone,
+      'address': address,
+    };
+  }
+}
+
 void main() {
   runApp(const MyApp());
 }
@@ -11,229 +48,204 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Tugas Widget & Layouting Flutter',
+      title: 'Katalog Pengguna',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        primarySwatch: Colors.indigo,
         useMaterial3: true,
       ),
-      home: Scaffold(
-        backgroundColor: Colors.grey[100],
-        appBar: AppBar(
-          title: const Text('Kartu Harga Layanan IT'),
-          centerTitle: true,
-          backgroundColor: Colors.blueAccent,
-          foregroundColor: Colors.white,
-        ),
-        body: const Center(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(vertical: 24.0),
-            child: ITServicePricingCard(),
-          ),
-        ),
+      home: HomeScreen(),
+    );
+  }
+}
+
+// ==========================================
+// 1. SCREEN 1: Beranda / Katalog (StatelessWidget)
+// ==========================================
+class HomeScreen extends StatelessWidget {
+  HomeScreen({super.key});
+
+  // Mockup data 3 pengguna (Json Response)
+  final List<Map<String, dynamic>> rawJsonList = [
+    {
+      'id': 101,
+      'name': 'Budi Santoso',
+      'email': 'budi.santoso@example.com',
+      'phone': '+62 812-3456-7890',
+      'address': 'Jl. Merdeka No. 45, Jakarta',
+    },
+    {
+      'id': 102,
+      'name': 'Siti Rahma',
+      'email': 'siti.rahma@example.com',
+      // phone & address disengaja null untuk testing fallback UserModel
+    },
+    {
+      'id': 103,
+      'name': 'Andi Wijaya',
+      'email': 'andi.wijaya@example.com',
+      'phone': '+62 857-1122-3344',
+      'address': 'Jl. Pemuda No. 12, Surabaya',
+    },
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    // Deserialization: Konversi JSON List ke List<UserModel>
+    final List<UserModel> userList =
+    rawJsonList.map((json) => UserModel.fromJson(json)).toList();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Katalog Pengguna'),
+        backgroundColor: Colors.indigo,
+        foregroundColor: Colors.white,
+      ),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(12.0),
+        itemCount: userList.length,
+        itemBuilder: (context, index) {
+          final user = userList[index];
+          return Card(
+            elevation: 3,
+            margin: const EdgeInsets.symmetric(vertical: 8.0),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Colors.indigo.shade100,
+                child: Text(
+                  user.name.substring(0, 1),
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo),
+                ),
+              ),
+              title: Text(
+                user.name,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(user.email),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () {
+                // Navigasi Navigator.push ke Screen 2
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DetailScreen(user: user),
+                  ),
+                );
+              },
+            ),
+          );
+        },
       ),
     );
   }
 }
 
-class ITServicePricingCard extends StatelessWidget {
-  const ITServicePricingCard({super.key});
+// ==========================================
+// 2. SCREEN 2: Detail Katalog (StatefulWidget)
+// ==========================================
+class DetailScreen extends StatefulWidget {
+  final UserModel user;
+
+  const DetailScreen({super.key, required this.user});
+
+  @override
+  State<DetailScreen> createState() => _DetailScreenState();
+}
+
+class _DetailScreenState extends State<DetailScreen> {
+  // State interaktif untuk tombol Bookmark/Favorit
+  bool isBookmarked = false;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 320,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 15,
-            spreadRadius: 2,
-            offset: const Offset(0, 5),
-          ),
-        ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Detail Profil'),
+        backgroundColor: Colors.indigo,
+        foregroundColor: Colors.white,
+        // AppBar otomatis menyediakan tombol Back
       ),
-      child: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 8.0),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12.0),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                      child: const Icon(
-                        Icons.laptop_mac_rounded,
-                        size: 40,
-                        color: Colors.blueAccent,
-                      ),
-                    ),
-                    const SizedBox(height: 16.0),
-                    const Text(
-                      'Paket Profesional',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 4.0),
-                    Text(
-                      'Solusi lengkap untuk skala bisnis berkembang.',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w300,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20.0),
-                const Divider(height: 1, color: Color(0xFFEEEEEE)),
-                const SizedBox(height: 20.0),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    const Text(
-                      'Rp 5.000.000',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.blueAccent,
-                      ),
-                    ),
-                    const SizedBox(width: 4.0),
-                    Text(
-                      '/ proyek',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24.0),
-                const Column(
-                  children: [
-                    FeatureItem(text: 'Desain UI/UX Khusus'),
-                    SizedBox(height: 12.0),
-                    FeatureItem(text: 'Pengembangan Flutter Multiplatform'),
-                    SizedBox(height: 12.0),
-                    FeatureItem(text: 'Integrasi REST API & Database'),
-                    SizedBox(height: 12.0),
-                    FeatureItem(text: 'Dukungan Pemeliharaan 3 Bulan'),
-                    SizedBox(height: 12.0),
-                    FeatureItem(text: 'Garansi Bebas Bug 100%'),
-                  ],
-                ),
-                const SizedBox(height: 28.0),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Paket Profesional Berhasil Dipilih!'),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueAccent,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14.0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      'Pilih Paket',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Avatar dan Nama
+            Center(
+              child: Column(
+                children: [
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundColor: Colors.indigo,
+                    child: Text(
+                      widget.user.name.substring(0, 1),
+                      style: const TextStyle(fontSize: 32, color: Colors.white),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          Positioned(
-            top: 16,
-            right: 16,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12.0,
-                vertical: 6.0,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.amber[400],
-                borderRadius: BorderRadius.circular(20.0),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.amber.withOpacity(0.3),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
+                  const SizedBox(height: 12),
+                  Text(
+                    widget.user.name,
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    'ID User: ${widget.user.id}',
+                    style: TextStyle(color: Colors.grey.shade600),
                   ),
                 ],
               ),
-              child: const Text(
-                'Rekomendasi',
-                style: TextStyle(
-                  color: Colors.black87,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.3,
+            ),
+            const SizedBox(height: 24),
+
+            // Container Warna Pastel untuk Informasi/Bio
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                color: Colors.indigo.shade50, // Latar belakang pastel
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.indigo.shade100),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Informasi Kontak & Alamat',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.indigo),
+                  ),
+                  const Divider(),
+                  const SizedBox(height: 8),
+                  Text('Email: ${widget.user.email}'),
+                  const SizedBox(height: 6),
+                  Text('Telepon: ${widget.user.phone ?? 'Tidak tersedia'}'),
+                  const SizedBox(height: 6),
+                  Text('Alamat: ${widget.user.address ?? 'Tidak tersedia'}'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Tombol Interaktif (Perubahan State pada StatefulWidget)
+            Center(
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isBookmarked ? Colors.amber.shade700 : Colors.indigo,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+                onPressed: () {
+                  setState(() {
+                    isBookmarked = !isBookmarked;
+                  });
+                },
+                icon: Icon(isBookmarked ? Icons.bookmark : Icons.bookmark_border),
+                label: Text(
+                  isBookmarked ? 'Tersimpan di Favorit' : 'Simpan ke Favorit',
+                  style: const TextStyle(fontSize: 16),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    );
-  }
-}
-
-class FeatureItem extends StatelessWidget {
-  final String text;
-
-  const FeatureItem({
-    super.key,
-    required this.text,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Icon(
-          Icons.check_circle_rounded,
-          color: Colors.green,
-          size: 18,
-        ),
-        const SizedBox(width: 10.0),
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey[800],
-              height: 1.2,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
