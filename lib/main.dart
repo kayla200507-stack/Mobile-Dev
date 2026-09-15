@@ -1,42 +1,5 @@
 import 'package:flutter/material.dart';
 
-// --- Model Data (UserModel) ---
-class UserModel {
-  final int id;
-  final String name;
-  final String email;
-  final String? phone;
-  final String? address;
-
-  UserModel({
-    required this.id,
-    required this.name,
-    required this.email,
-    this.phone,
-    this.address,
-  });
-
-  factory UserModel.fromJson(Map<String, dynamic> json) {
-    return UserModel(
-      id: json['id'] as int? ?? 0,
-      name: json['name'] as String? ?? 'Unknown',
-      email: json['email'] as String? ?? 'No Email',
-      phone: json['phone'] as String?,
-      address: json['address'] as String?,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'email': email,
-      'phone': phone,
-      'address': address,
-    };
-  }
-}
-
 void main() {
   runApp(const MyApp());
 }
@@ -47,87 +10,104 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Katalog Pengguna',
+      title: 'Katalog Produk',
       theme: ThemeData(
         primarySwatch: Colors.indigo,
         useMaterial3: true,
       ),
-      home: HomeScreen(),
+      home: const HomeScreen(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
 
-// ==========================================
-// 1. SCREEN 1: Beranda / Katalog (StatelessWidget)
-// ==========================================
-class HomeScreen extends StatelessWidget {
-  HomeScreen({super.key});
+// Model Data Katalog
+class CatalogItem {
+  final String id;
+  final String title;
+  final String price;
+  final String description;
+  final IconData icon;
 
-  // Mockup data 3 pengguna (Json Response)
-  final List<Map<String, dynamic>> rawJsonList = [
-    {
-      'id': 101,
-      'name': 'Budi Santoso',
-      'email': 'budi.santoso@example.com',
-      'phone': '+62 812-3456-7890',
-      'address': 'Jl. Merdeka No. 45, Jakarta',
-    },
-    {
-      'id': 102,
-      'name': 'Siti Rahma',
-      'email': 'siti.rahma@example.com',
-      // phone & address disengaja null untuk testing fallback UserModel
-    },
-    {
-      'id': 103,
-      'name': 'Andi Wijaya',
-      'email': 'andi.wijaya@example.com',
-      'phone': '+62 857-1122-3344',
-      'address': 'Jl. Pemuda No. 12, Surabaya',
-    },
+  const CatalogItem({
+    required this.id,
+    required this.title,
+    required this.price,
+    required this.description,
+    required this.icon,
+  });
+}
+
+// SCREEN 1: Beranda / Katalog (Wajib StatelessWidget)
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  // Data 3 card sesuai spesifikasi
+  final List<CatalogItem> items = const [
+    CatalogItem(
+      id: '1',
+      title: 'Laptop Gaming Pro',
+      price: 'Rp 18.500.000',
+      description: 'Laptop performa tinggi dengan prosesor generasi terbaru dan kartu grafis canggih untuk kebutuhan komputasi berat.',
+      icon: Icons.laptop_mac,
+    ),
+    CatalogItem(
+      id: '2',
+      title: 'Smartphone Flagship',
+      price: 'Rp 12.000.000',
+      description: 'Smartphone layar OLED dengan sistem kamera profesional, pengisian daya cepat, dan daya tahan baterai tinggi.',
+      icon: Icons.smartphone,
+    ),
+    CatalogItem(
+      id: '3',
+      title: 'Headphones Wireless',
+      price: 'Rp 2.500.000',
+      description: 'Headphone nirkabel dengan fitur Active Noise Cancelling (ANC), peredam bising, dan daya baterai hingga 30 jam.',
+      icon: Icons.headset,
+    ),
   ];
 
   @override
   Widget build(BuildContext context) {
-    // Deserialization: Konversi JSON List ke List<UserModel>
-    final List<UserModel> userList =
-    rawJsonList.map((json) => UserModel.fromJson(json)).toList();
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Katalog Pengguna'),
+        title: const Text('Katalog Produk'),
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(12.0),
-        itemCount: userList.length,
+        itemCount: items.length,
         itemBuilder: (context, index) {
-          final user = userList[index];
+          final item = items[index];
           return Card(
             elevation: 3,
             margin: const EdgeInsets.symmetric(vertical: 8.0),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: ListTile(
+              contentPadding: const EdgeInsets.all(12),
               leading: CircleAvatar(
+                radius: 28,
                 backgroundColor: Colors.indigo.shade100,
-                child: Text(
-                  user.name.substring(0, 1),
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo),
-                ),
+                child: Icon(item.icon, color: Colors.indigo, size: 28),
               ),
               title: Text(
-                user.name,
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                item.title,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
-              subtitle: Text(user.email),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              subtitle: Text(
+                item.price,
+                style: const TextStyle(color: Colors.indigo, fontWeight: FontWeight.w600),
+              ),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 18),
               onTap: () {
-                // Navigasi Navigator.push ke Screen 2
+                // Stack Navigation: Perpindahan Screen menggunakan Navigator.push
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => DetailScreen(user: user),
+                    builder: (context) => DetailScreen(item: item),
                   ),
                 );
               },
@@ -139,109 +119,138 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-// ==========================================
-// 2. SCREEN 2: Detail Katalog (StatefulWidget)
-// ==========================================
+// SCREEN 2: Detail Katalog (Wajib StatefulWidget)
 class DetailScreen extends StatefulWidget {
-  final UserModel user;
+  final CatalogItem item;
 
-  const DetailScreen({super.key, required this.user});
+  const DetailScreen({super.key, required this.item});
 
   @override
   State<DetailScreen> createState() => _DetailScreenState();
 }
 
 class _DetailScreenState extends State<DetailScreen> {
-  // State interaktif untuk tombol Bookmark/Favorit
-  bool isBookmarked = false;
+  // Pengelolaan State Interaktif (Event & State)
+  bool isFavorite = false;
+  int quantity = 1;
+
+  void _toggleFavorite() {
+    setState(() {
+      isFavorite = !isFavorite;
+    });
+  }
+
+  void _incrementQuantity() {
+    setState(() {
+      quantity++;
+    });
+  }
+
+  void _decrementQuantity() {
+    if (quantity > 1) {
+      setState(() {
+        quantity--;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // AppBar otomatis menyediakan tombol Back ke Screen 1
       appBar: AppBar(
-        title: const Text('Detail Profil'),
+        title: Text(widget.item.title),
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
-        // AppBar otomatis menyediakan tombol Back
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Avatar dan Nama
+            // Visual Icon Utama
             Center(
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundColor: Colors.indigo,
-                    child: Text(
-                      widget.user.name.substring(0, 1),
-                      style: const TextStyle(fontSize: 32, color: Colors.white),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    widget.user.name,
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    'ID User: ${widget.user.id}',
-                    style: TextStyle(color: Colors.grey.shade600),
-                  ),
-                ],
+              child: Container(
+                height: 100,
+                width: 100,
+                decoration: BoxDecoration(
+                  color: Colors.indigo.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(widget.item.icon, size: 50, color: Colors.indigo),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
-            // Container Warna Pastel untuk Informasi/Bio
+            // Text Nama Katalog dan Tombol Favorit (Event & State)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.item.title,
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: isFavorite ? Colors.red : Colors.grey,
+                    size: 28,
+                  ),
+                  onPressed: _toggleFavorite,
+                ),
+              ],
+            ),
+
+            // Text Harga
+            Text(
+              widget.item.price,
+              style: const TextStyle(fontSize: 18, color: Colors.indigo, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+
+            // Container Berlatar Warna Pastel + Padding untuk Deskripsi
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
-                color: Colors.indigo.shade50, // Latar belakang pastel
+                color: const Color(0xFFE8F5E9), // Warna Pastel Hijau Muda
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.indigo.shade100),
+                border: Border.all(color: Colors.green.shade200),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Informasi Kontak & Alamat',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.indigo),
+                    'Deskripsi Produk:',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.green),
                   ),
-                  const Divider(),
-                  const SizedBox(height: 8),
-                  Text('Email: ${widget.user.email}'),
                   const SizedBox(height: 6),
-                  Text('Telepon: ${widget.user.phone ?? 'Tidak tersedia'}'),
-                  const SizedBox(height: 6),
-                  Text('Alamat: ${widget.user.address ?? 'Tidak tersedia'}'),
+                  Text(
+                    widget.item.description,
+                    style: const TextStyle(fontSize: 14, height: 1.4, color: Colors.black87),
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 24),
 
-            // Tombol Interaktif (Perubahan State pada StatefulWidget)
-            Center(
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: isBookmarked ? Colors.amber.shade700 : Colors.indigo,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            // Komponen Tambahan Pengujian Event & State (Kuantitas)
+            Row(
+              children: [
+                const Text('Jumlah Pesanan: ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                const Spacer(),
+                IconButton(
+                  onPressed: _decrementQuantity,
+                  icon: const Icon(Icons.remove_circle_outline),
                 ),
-                onPressed: () {
-                  setState(() {
-                    isBookmarked = !isBookmarked;
-                  });
-                },
-                icon: Icon(isBookmarked ? Icons.bookmark : Icons.bookmark_border),
-                label: Text(
-                  isBookmarked ? 'Tersimpan di Favorit' : 'Simpan ke Favorit',
-                  style: const TextStyle(fontSize: 16),
+                Text('$quantity', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                IconButton(
+                  onPressed: _incrementQuantity,
+                  icon: const Icon(Icons.add_circle_outline),
                 ),
-              ),
+              ],
             ),
           ],
         ),
