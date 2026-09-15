@@ -32,7 +32,7 @@ Aplikasi Flutter ini dibuat untuk mendemonstrasikan implementasi **Navigation & 
    ```bash
    git clone https://github.com/kayla200507-stack/Mobile-Dev.git 
 
-   # Tugas #5 Mobile Developer - Navigasi & State Management Flutter
+   # Tugas #5 Mobile Developer - Navigasi, event & State Management Flutter
 
 ## Fitur Utama
 
